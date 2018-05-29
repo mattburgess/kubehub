@@ -1,11 +1,12 @@
+import logging
 import requests
 from flask import Flask, jsonify
 
 app = Flask(__name__)
 
 def get_repos_by_topic(topic_name, query_limit):
-    print('topic = {0}'.format(topic_name))
-    print('query_limit = {0}'.format(query_limit))
+    app.logger.debug('topic = {0}'.format(topic_name))
+    app.logger.debug('query_limit = {0}'.format(query_limit))
     query_params = {'q': 'topic:{0}'.format(topic_name), 'per_page': 100}
     r = requests.get('https://api.github.com/search/repositories',
                      params=query_params)
@@ -15,7 +16,7 @@ def get_repos_by_topic(topic_name, query_limit):
         r = requests.get(r.links['next']['url'])
         results += r.json()['items']
 
-    print('{0} repositories found'.format(len(results)))
+    app.logger.info('{0} repositories found'.format(len(results)))
 
     wanted_keys = ['id', 'name', 'full_name', 'html_url', 'language',
                    'updated_at', 'pushed_at', 'stargazers_count']
