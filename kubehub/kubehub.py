@@ -1,5 +1,7 @@
 import logging
 import requests
+import werkzeug
+
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -10,10 +12,12 @@ def get_repos_by_topic(topic_name, query_limit):
     query_params = {'q': 'topic:{0}'.format(topic_name), 'per_page': 100}
     r = requests.get('https://api.github.com/search/repositories',
                      params=query_params)
+    r.raise_for_status()
 
     results = r.json()['items']
     while (not query_limit or len(results) < query_limit) and r.links['next']:
         r = requests.get(r.links['next']['url'])
+        r.raise_for_status()
         results += r.json()['items']
 
     app.logger.info('{0} repositories found'.format(len(results)))
@@ -29,3 +33,7 @@ def get_repos_by_topic(topic_name, query_limit):
 def kubernetes():
     repos = get_repos_by_topic('kubernetes', 500)
     return jsonify(repos)
+
+@app.errorhandler(werkzeug.exceptions.InternalServerError)
+def handle_internal_server_error(e):
+    return 'Internal Server Error!', 500
