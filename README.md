@@ -17,7 +17,7 @@ To run the built-in HTTP server, run the following from within the top-level
 `kubehub` directory:
 
 ```bash
-export FLASK_APP=kubehub.py
+export FLASK_APP=kubehub/kubehub.py
 flask run
 ```
 
