@@ -33,8 +33,8 @@ def get_repos_by_topic(topic_name, query_limit):
         filtered_results.append({k: result[k] for k in wanted_keys})
     return filtered_results
 
-def sort_repos(repos, key):
-    return sorted(repos, key=itemgetter(key))
+def sort_repos(repos, key, reverse):
+    return sorted(repos, key=itemgetter(key), reverse=reverse)
 
 @app.route("/api/kubernetes")
 def kubernetes():
@@ -44,7 +44,7 @@ def kubernetes():
 @app.route("/api/popularity/kubernetes")
 def popularity_kubernetes():
     repos = get_repos_by_topic('kubernetes', 500)
-    sorted_repos = sort_repos(repos, 'stargazers_count')
+    sorted_repos = sort_repos(repos, 'stargazers_count', reverse=True)
     return jsonify(sorted_repos)
 
 @app.errorhandler(werkzeug.exceptions.Forbidden)

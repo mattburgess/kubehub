@@ -31,7 +31,7 @@ class KubehubTests(unittest.TestCase):
         assert num_repos == 500
         for i in range(num_repos):
             if i < (num_repos - 1):
-                assert json[i]['stargazers_count'] <= json[i+1]['stargazers_count']
+                assert json[i]['stargazers_count'] >= json[i+1]['stargazers_count']
 
 if __name__ == "__main__":
     unittest.main()
