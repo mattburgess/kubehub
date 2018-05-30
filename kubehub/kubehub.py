@@ -20,7 +20,6 @@ Response format:
     'updated_at', 'pushed_at', 'stargazers_count'},...]
 
 Todo:
-    * Make Redis connection parameters configurable
     * Make Redis cache TTL configurable
     * Remove hard-coded sleep workaround for GitHub's rate-limiting (see
       https://developer.github.com/v3/rate_limit/)
@@ -30,6 +29,7 @@ Todo:
 """
 
 import logging
+import os
 import redis
 import requests
 import time
@@ -40,8 +40,11 @@ from operator import itemgetter
 
 app = Flask(__name__)
 
-r_cache = redis.StrictRedis(host='localhost', port=6379, db=0,
-                            decode_responses=True)
+redis_host = os.environ.get("REDIS_HOST", default='localhost')
+redis_port = os.environ.get("REDIS_PORT", default='6379')
+redis_db = os.environ.get("REDIS_DB", default='0')
+r_cache = redis.StrictRedis(host=redis_host, port=int(redis_port),
+                            db=int(redis_db), decode_responses=True)
 
 
 def get_repos_from_cache():
@@ -160,3 +163,6 @@ def handle_internal_server_error(e):
 @app.errorhandler(redis.exceptions.ConnectionError)
 def handle_redis_connection_error(e):
     return 'Internal Server Error!', 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
