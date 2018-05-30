@@ -29,9 +29,17 @@ class KubehubTests(unittest.TestCase):
         json = response.get_json()
         num_repos = len(json)
         assert num_repos == 500
-        for i in range(num_repos):
-            if i < (num_repos - 1):
-                assert json[i]['stargazers_count'] >= json[i+1]['stargazers_count']
+        for i in range(num_repos - 1):
+            assert json[i]['stargazers_count'] >= json[i+1]['stargazers_count']
+
+    def test_activity_kubernetes(self):
+        response = self.app.get('/api/activity/kubernetes')
+        self.assertEqual(response.status_code, 200)
+        json = response.get_json()
+        num_repos = len(json)
+        assert num_repos == 500
+        for i in range(num_repos - 1):
+            assert json[i]['updated_at'] >= json[i+1]['updated_at']
 
 if __name__ == "__main__":
     unittest.main()

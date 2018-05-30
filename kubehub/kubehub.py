@@ -47,6 +47,12 @@ def popularity_kubernetes():
     sorted_repos = sort_repos(repos, 'stargazers_count', reverse=True)
     return jsonify(sorted_repos)
 
+@app.route("/api/activity/kubernetes")
+def activity_kubernetes():
+    repos = get_repos_by_topic('kubernetes', 500)
+    sorted_repos = sort_repos(repos, 'updated_at', reverse=True)
+    return jsonify(sorted_repos)
+
 @app.errorhandler(werkzeug.exceptions.Forbidden)
 def handle_forbidden_error(e):
     return 'Too many requests to GitHub API', 403
