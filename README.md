@@ -13,6 +13,9 @@ source bin/activate
 pip3 install -r requirements.txt
 ```
 
+You'll also need to have the redis server installed locally and have it listen
+on its default port of 6379.
+
 To run the built-in HTTP server, run the following from within the top-level
 `kubehub` directory:
 

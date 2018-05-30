@@ -1,4 +1,5 @@
 import logging
+import redis
 import requests
 import time
 import werkzeug
@@ -8,30 +9,44 @@ from operator import itemgetter
 
 app = Flask(__name__)
 
-def get_repos_by_topic(topic_name, query_limit):
-    app.logger.debug('topic = {0}'.format(topic_name))
-    app.logger.debug('query_limit = {0}'.format(query_limit))
-    query_params = {'q': 'topic:{0}'.format(topic_name), 'per_page': 100}
-    r = requests.get('https://api.github.com/search/repositories',
-                     params=query_params)
-    time.sleep(5)
-    r.raise_for_status()
+r_cache = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 
-    results = r.json()['items']
-    while (not query_limit or len(results) < query_limit) and r.links['next']:
-        r = requests.get(r.links['next']['url'])
+def get_repos_from_cache():
+    try:
+        repos = []
+        for key in r_cache.scan_iter("*"):
+            repos.append(r_cache.hgetall(key))
+    except redis.exceptions.ConnectionError as e:
+        raise
+    return repos
+
+def get_repos_by_topic(topic_name, query_limit):
+    repos = get_repos_from_cache()
+
+    if not repos:
+        app.logger.debug('topic = {0}'.format(topic_name))
+        app.logger.debug('query_limit = {0}'.format(query_limit))
+        query_params = {'q': 'topic:{0}'.format(topic_name), 'per_page': 100}
+        r = requests.get('https://api.github.com/search/repositories',
+                         params=query_params)
         time.sleep(5)
         r.raise_for_status()
-        results += r.json()['items']
 
-    app.logger.info('{0} repositories found'.format(len(results)))
+        results = r.json()['items']
+        while (not query_limit or len(results) < query_limit) and r.links['next']:
+            r = requests.get(r.links['next']['url'])
+            time.sleep(5)
+            r.raise_for_status()
+            results += r.json()['items']
 
-    wanted_keys = ['id', 'name', 'full_name', 'html_url', 'language',
-                   'updated_at', 'pushed_at', 'stargazers_count']
-    filtered_results = []
-    for result in results:
-        filtered_results.append({k: result[k] for k in wanted_keys})
-    return filtered_results
+        wanted_keys = ['name', 'full_name', 'html_url', 'language',
+                       'updated_at', 'pushed_at', 'stargazers_count']
+        for result in results:
+            repo = {k: result[k] for k in wanted_keys}
+            r_cache.hmset(result['id'], repo)
+            r_cache.pexpire(result['id'], 60*60*1000)
+        repos = get_repos_from_cache()
+    return repos
 
 def sort_repos(repos, key, reverse):
     return sorted(repos, key=itemgetter(key), reverse=reverse)
@@ -59,4 +74,8 @@ def handle_forbidden_error(e):
 
 @app.errorhandler(werkzeug.exceptions.InternalServerError)
 def handle_internal_server_error(e):
+    return 'Internal Server Error!', 500
+
+@app.errorhandler(redis.exceptions.ConnectionError)
+def handle_redis_connection_error(e):
     return 'Internal Server Error!', 500
