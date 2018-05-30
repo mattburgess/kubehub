@@ -29,4 +29,16 @@ from your web browser.
 
 ## Deploying to a Production Environment
 
-TODO
+It's recommended to deploy kubehub using Docker in production environments.  To
+do this, simply:
+
+```bash
+git clone https://github.com/mattburgess/kubehub
+cd kubehub
+docker-compose up
+```
+
+By default, the API will be available on port `5000` on all network interfaces.
+
+To test that kubehub is working correctly, simply point your web browser at
+http://your_docker_host:5000/api/kubernetes
