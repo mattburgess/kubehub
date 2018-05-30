@@ -1,4 +1,5 @@
 import os
+import redis
 import unittest
 
 from kubehub.kubehub import app, get_repos_by_topic
@@ -6,6 +7,8 @@ from kubehub.kubehub import app, get_repos_by_topic
 class KubehubTests(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
+        r_cache = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+        r_cache.flushall()
 
     def tearDown(self):
         pass
