@@ -4,10 +4,12 @@ import unittest
 
 from kubehub.kubehub import app, get_repos_by_topic
 
+
 class KubehubTests(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
-        r_cache = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+        r_cache = redis.StrictRedis(host='localhost', port=6379, db=0,
+                                    decode_responses=True)
         r_cache.flushall()
 
     def tearDown(self):
@@ -43,6 +45,7 @@ class KubehubTests(unittest.TestCase):
         assert num_repos == 500
         for i in range(num_repos - 1):
             assert json[i]['updated_at'] >= json[i+1]['updated_at']
+
 
 if __name__ == "__main__":
     unittest.main()
